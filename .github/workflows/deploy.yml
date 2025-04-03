@@ -1,4 +1,4 @@
-name: Deploy pages
+name: Deploy to pages
 
 on:
   workflow_dispatch:
@@ -13,6 +13,10 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: ./slides
 
 jobs:
   build:
@@ -32,7 +36,7 @@ jobs:
         run: nci
 
       - name: Build
-        run: nr build --base /${{github.event.repository.name}}/
+        run: nr build --base /${{github.event.repository.name}}/slides/ --out ../dist/slides
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -44,7 +48,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}slides/
     needs: build
     runs-on: ubuntu-latest
     name: Deploy
