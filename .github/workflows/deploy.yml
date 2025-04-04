@@ -14,10 +14,6 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-defaults:
-  run:
-    working-directory: ./slides
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,7 +32,7 @@ jobs:
         run: nci
 
       - name: Build
-        run: nr build --base /${{github.event.repository.name}}/slides/
+        run: nr build --base /${{github.event.repository.name}}
         #run: nr build --base /${{github.event.repository.name}}/slides/ --out ../dist/slides
 
       - name: Setup Pages
