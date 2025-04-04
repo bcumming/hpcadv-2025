@@ -223,6 +223,29 @@ on /user-environment type squashfs
 ```
 
 ---
+layout: two-cols
+layoutClass: gap-2
+---
+
+# uenv slurm plugin
+
+Notes on slurm integration
+
+::right::
+
+```
+# example of uenv start, srun
+```
+
+```
+# example of srun --uenv
+```
+
+```
+# example of sbatch
+```
+
+---
 
 # Interlude: CI/CD for users
 
@@ -238,42 +261,86 @@ layoutClass: gap-2
 
 # Part 3: deploying stacks
 
-We developed `uenv` -- "the lightest container runtime possible"
-* mount the squashfs image at `/user-environment`
-* set views = environment variable sets
-    * module view: provide modules
-    * spack view: spack integration
-    * app views: bespoke environments
-* manage uenv images in a local repository
+All uenv image recipes are maintained on [GitHub](https://github.com/eth-cscs/alps-uenv).
 
-Users see a path populated with their software and a change in environment variables
+The CI/CD external service runs the build and deployment pipeline
 
-Simple was implemented quickly, just works, and just keeps working
+* a pull request is opened for a recipe update
+* a build job builds the uenv on the target cluster
+* ORAS pushes the squashfs artifact to a container registry
+* a test job pulls and runs ReFrame tests
+
+Further manual testing can be performed (including by target users)
+
+The image is deployed with a shallow copy.
 
 ::right::
 
-```console
-$ uenv image ls -ahl
-uenv                             arch   system  id                size(MB)  date
-gromacs/2024:v1                  gh200  daint   b58e6406810279d5   3,658    2024-09-12
-julia/24.9:v1                    gh200  daint   7a4269abfdadc046   3,939    2024-11-09
-jupyterlab/v4.1.8:v1             gh200  daint   e23aa859dd398637     453    2025-01-10
-linalg/24.11:v1                  gh200  daint   e1640cf6aafdca01   4,461    2024-12-03
-linaro-forge/23.1.2:v1           gh200  daint   fd67b726a90318d6     341    2024-08-26
-namd/3.0:v3                      gh200  daint   49bc65c6905eb5da   4,028    2024-12-12
-netcdf-tools/2024:v1             gh200  daint   2a799e99a12b7c13   1,260    2024-09-04
-prgenv-gnu/24.11:v1              gh200  daint   b81fd6ba25e88782   4,191    2024-11-27
-prgenv-nvfortran/24.11:v2        gh200  daint   d2afc254383cef20   8,703    2025-01-30
-pytorch/v2.6.0:1716539422        gh200  daint   1c5e00f7556ad65d   8,124    2025-03-14
-specfem3d/4.1.0:1707945673       gh200  daint   c9ad88d01a48a263   3,672    2025-03-10
-$ uenv start prgenv-gnu --view=default
-$ which nvcc
-/user-environment/env/default/bin/nvcc
-$ mpicc --version
-gcc (Spack GCC) 13.3.0
-$ mount | grep /user-environment
-$SCRATCH/.uenv-images/images/b8...ac5/store.squashfs
-on /user-environment type squashfs
-(ro,nosuid,nodev,relatime,errors=continue)
+Deployment is performed using the `uenv` CLI
+```
+$ uenv image copy build::vasp/v6.5.0:1631426005@daint%gh200 \
+                  deploy::vasp/v6.5.0:v1@daint%gh200
+$ uenv image find vasp
+uenv            arch   system  id                size(MB)  date
+vasp/v6.4.3:v1  gh200  daint   86edce79074e3478   7,963    2024-08-26
+vasp/v6.4.3:v2  gh200  daint   d4753368f8b2baca   7,954    2025-01-24
+vasp/v6.5.0:v1  gh200  daint   b7b097cb03d36451   5,709    2025-01-24
 ```
 
+VASP is restricted: pull with a token:
+```
+$ uenv image  pull --token=$HOME/.ssh/jfrog-token \
+                vasp/v6.5.0:v1
+pulling b7b097cb03d36451 100.00% ━━━━━━━━━━━ 5709/5709
+updating vasp/v6.5.0:v1@daint%gh200
+```
+
+And use:
+```
+$ uenv start vasp/v6.5.0:v1 --view=vasp
+$ srun -n64 -N16 --gpus-per-task=1 vasp_gam ...
+```
+
+---
+
+# Axioms revisited
+
+Go over each axiom and whether it was satisfied
+
+---
+
+# C2SM
+
+Describe how C2SM created their own pipeline and now manage the full stack for their community
+
+---
+
+# Lessons learnt
+
+By empowering our glorified users, i.e. staff who don't have root
+
+we empowered our users and communities
+* and achieved a key objective of Alps as research infrastructure
+
+This wasn't my masterplan - I was just focussed on end to end responsibility for staff
+
+---
+
+# A word on documentation
+
+Our current documentation uses Confluence (don't try this at home)
+* only CSCS staff can edit docs
+* they have to use unfamiliar workflows to write, review and deploy docs
+* the docs are not great, and user communities are creating parallel docs in markdown
+
+We are moving to a GitHub repository with:
+* a deployment pipeline that generates preview docs
+* familiar tools
+* they can contribute to the whole documentation stack
+* staff are contributing much more enthusiastically already!
+
+If docs are structured around communities... will the contribute?
+
+---
+
+# Thanks for your attention
