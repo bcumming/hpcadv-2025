@@ -7,7 +7,7 @@ theme: ./slidev-theme-cscs
 
 **How we learnt to relax and give users what they want.**
 
-Ben Cumming @ HPC Advisery 2025
+Ben Cumming @ HPC Advisory 2025
 
 ---
 
@@ -17,7 +17,12 @@ I have been at CSCS for 12 years: the first 8 years as a scientific software dev
   <img src="./images/ben.png" alt="Description" style="width: 100%;" />
 </div>
 
+<<<<<<< HEAD
 * effectively a glorified user
+=======
+* spent the first 8 as a research software engineer and benchmarker
+    * effectively a glorified user
+>>>>>>> 17beac7ccf39acff531cef09f75837090564a252
 * my favourite complaints included:
     * why do people think Python is easy?
     * why can't we have up-to-date software on HPC systems?
@@ -76,23 +81,23 @@ CSCS was a leader in developing CI/CD for building the software stack and buildi
 
 # Case study: C2SM
 
-The Center for Climate Systems Modeling (C2SM) at ETHZ are a key user
-* Key use case: climate simulation using COSMO and ICON
-* Complicated Fortran codebases that are very sensitive to changes in dependencies
+The Center for Climate Systems Modeling (C2SM) at ETHZ are long-time collaborators and users:
+* Their main case: climate simulation using COSMO then ICON
+* Complicated Fortran codes that are very sensitive to dependencies
 
-To upgrade the system:
+The proccess for upgrading the systems looked like:
 ```
 do {
-    install / configure a new version of CPE on a TDS system
-    CSCS update recipes for our software stack and build on a shared file system
-    C2SM access the system to build and test their software
+    (root) install / configure a new version of CPE on a TDS system
+    (user) CSCS update recipes for our software stack and build on a shared file system
+    (user) C2SM access the system to build and test their software
 } while (there are problems);
 update Daint
 ```
 
-Frequently we were unable to resolve issues and had to wait for another update
-* everybody upgrades, or nobody upgrades
-* every upgrade has knock on effects for every user
+**Upgrades were delayed or cancelled due to unresolved issues:**
+* everybody upgrades, or nobody upgrades;
+* every upgrade has knock on effects for every user.
 
 ---
 layout: two-cols
@@ -103,15 +108,12 @@ layoutClass: gap-2
 
 Alps is a HPE Cray EX system with ~4000 nodes.
 
-**key changes**:
-* Partitioned into use-case and tennent-specific clusters
-* Community of users expanded, bringing new requirements
+* Use-case and tennent-specific clusters;
+* Aim to have communities take responsibility for software, documentation and support.
 
-The ML/AI community can't wait for software upgrades
-
-The climate community can't upgrade their workflow every 2 weeks
-
-Getting a system administrator to build a new image and reboot a cluster to deploy does not scale
+We needed to rethink deployment of software, because these don't scale:
+* Getting a system administrator to build a new image and reboot a cluster;
+* Building a monolithic software stack on top of a complex vendored stack.
 
 ::right::
 
@@ -130,21 +132,19 @@ Getting a system administrator to build a new image and reboot a cluster to depl
 
 ---
 
-# The new HPC provider axioms
+# The new HPC center axioms
 
-HPC Centers provide pre-built software for their users.
+1. HPC Centers provide pre-built software for their users.
 
-Vendors are not capable of delivering stable, up to date, out-of-the box solutions
+1. Vendors are not capable of delivering stable, up to date, software that meets users' needs
 
-Scientific projects have 1-3 year duration - once their software is built and working it must continue to work for the project duration.
+1. Scientific projects have 1-3 year duration - once installed it should work for the project duration.
 
-Other users need to use the latest versions of software
+1. Developers and some communities like ML/AI users update frequently to the latest versions of software
 
-Staff who install software and help users need to have full control over the whole software stack.
+1. Staff who install software and help users need to have full control over the whole software stack.
 
-Software installation should not require any changes to the running system, or interrupt users.
-
-Rollback of software stacks must be possible
+1. Software installation can't require changes to the running system, or interrupt users.
 
 ---
 layout: two-cols
@@ -153,16 +153,16 @@ layoutClass: gap-2
 
 # Part 1: independent stacks
 
-HPC centers have to provide software stacks optimised for the target hardware.
+We created [Stackinator](https://eth-cscs.github.io/stackinator/) for building software stacks:
+* Each software stack is a yaml _recipe_;
+* Clusters are described in yaml files;
+* `Stackinator(recipe, cluster) -> Makefile`;
+* The Makefile generates a squashfs file of the complete software stack;
+* Minimal dependencies on the base OS (libfabric).
 
-We created [Stackinator](https://eth-cscs.github.io/stackinator/)
-* software stacks are described in a yaml recipe
-* clusters are described in yaml files
-* stackinator generates a Makefile the recipe and cluster definition 
-
-Uses Spack with custom packages with Alps-specific optimizations
-
-**the output is a single squashfs file containing the complete software stack**
+Uses Spack and packages with Alps-specific optimizations:
+* The version of Spack is per recipe;
+* Repackaged vendored software, e.g. `cray-mpich`.
 
 ::right::
 
@@ -197,27 +197,23 @@ icon:
 ```
 
 ---
-
-# Stackinator
-
----
 layout: two-cols
 layoutClass: gap-2
 ---
 
 # Part 2: using stacks
 
-We developed `uenv` -- "the lightest container runtime possible"
-* mount the squashfs image at `/user-environment`
-* set views = environment variable sets
-    * module view: provide modules
-    * spack view: spack integration
-    * app views: bespoke environments
-* manage uenv images in a local repository
+We developed `uenv` -- "the lightest container runtime possible" that allows users to:
+* mount the squashfs image at `/user-environment`;
+* set views = environment variable sets;
+    * __module view__ provide modules
+    * __spack view__ spack integration
+    * __app views__ bespoke environments
+* manage uenv images in a local repository.
 
 Users see a path populated with their software and a change in environment variables
 
-Simple was implemented quickly, just works, and just keeps working
+**Simple is implemented quickly, just works, and just keeps working.**
 
 ::right::
 
@@ -253,20 +249,39 @@ layoutClass: gap-2
 
 # uenv slurm plugin
 
-Notes on slurm integration
+Slurm integration is a must have:
+* convenient for users;
+* minimise resource consumption -- only mount the squashfs image once per node;
+* improved logging -- keep track of who uses which uenv and how much.
+
+We followed the "principle of least surprise" when deciding on default behavior:
+* what do users expect coming from a "modules-based" environment?
+* most users don't understand the different between login and compute nodes.
 
 ::right::
 
-```
-# example of uenv start, srun
-```
-
-```
-# example of srun --uenv
+Slurm will mounts squashfs and configures the environment on the compute nodes using flags:
+```console
+$ srun --uenv=gromacs/2024 --view=plumed -n4 -N1 gmx_mpi ...
 ```
 
+`srun` inherits the login environment from by default:
+```console
+$ uenv start gromacs/2024 --view=plumed
+$ srun -n4 -N1 gmx_mpi ...
 ```
-# example of sbatch
+
+`sbatch` and `srun` work together:
+```console
+#!/bin/bash
+#SBATCH num-tasks=4
+#SBATCH num-nodes=1
+#SBATCH uenv=gromacs/2024
+#SBATCH view=plumed
+
+srun gmx_mpi ...
+# the defaults can be overloaded
+srun --uenv=prgenv-gnu/24.11 --view=default ./post-process
 ```
 
 ---
@@ -329,24 +344,52 @@ $ srun -n64 -N16 --gpus-per-task=1 vasp_gam ...
 
 # Axioms revisited
 
-Go over each axiom and whether it was satisfied
+1. ✅ HPC Centers provide pre-built software for their users.
+1. Vendors are not capable of delivering stable, up to date, software that meets users' needs
+1. ✅ Scientific projects have 1-3 year duration - once installed it should work for the project duration.
+    * over the last 2 years uenv have not broken due to system changes.
+    * with breaking changes, we can rebuild images.
+1. ✅ Developers and some communities like ML/AI users update frequently to the latest versions of software
+    * uenv and containers can be built and used as soon as new versions of cuda, MPI, etc. are available
+    * there are some limits imposed by kernel and driver versions available to us.
+1. ✅ Staff who install software and help users need to have full control over the whole software stack.
+    * staff can build software by hand, or through pipelines.
+1. ✅ Software installation can't require changes to the running system, or interrupt users.
+    * uenv and container deployment are deployed to a container registry.
 
 ---
 
-# C2SM
+# The Climate and Weather Platform
 
-Describe how C2SM created their own pipeline and now manage the full stack for their community
+The Climate and Weather Platform is part of the Alps research infrastructure:
+* "Santis": a GH200 based cluster on Alps
+* the main partners are **C2SM**, Exclaim and MeteoSchweiz.
+
+Initially I provided the software environments:
+* An `icon` environment for building and running ICON on Santis;
+* `mch` environments for MeteoSchweiz production;
+* environments for R&D and analysis.
+
+C2SM created their own pipeline for deploying uenv:
+* C2SM and MeteoSchweiz software stacks are no longer under sole management by CSCS;
+* C2SM are actively updating [their recipes](https://github.com/C2SM/software-stack-recipes/pull/6).
 
 ---
 
-# Lessons learnt
+# Retrospective
 
-By empowering our glorified users, i.e. staff who don't have root
+By empowering our glorified users, i.e. staff who don't have root, we empowered our users.
 
-we empowered our users and communities
-* and achieved a key objective of Alps as research infrastructure
+* empowering is both responsibility and useable tools and processes
 
-This wasn't my masterplan - I was just focussed on end to end responsibility for staff
+We have started achieving a key objective of Alps as research infrastructure:
+
+* User communities and partners take responsibility for the software environment provided to users on their Alps platforms.
+
+<br>
+<br>
+
+__This wasn't part of a clever masterplan - we focussed on end to end responsibility for staff and realised later the possibilities for user communities.__
 
 ---
 
@@ -367,4 +410,17 @@ If docs are structured around communities... will the contribute?
 
 ---
 
-# Thanks for your attention
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+## Thank you!
+
+<br>
+<br>
+
+## Any questions?
+
