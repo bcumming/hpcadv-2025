@@ -11,22 +11,22 @@ Ben Cumming @ HPC Advisery 2025
 
 ---
 
-# Who Am I
+I have been at CSCS for 12 years: the first 8 years as a scientific software developer and benchmarker
 
-I have been at CSCS for 12 years:
+<div style="float: right; width: 25%; margin-right: 1em;">
+  <img src="./images/ben.png" alt="Description" style="width: 100%;" />
+</div>
 
-* spent the first 8 as a scientific software developer and benchmarker
-    * effectively a glorified user
+* effectively a glorified user
 * my favourite complaints included:
     * why do people think Python is easy?
-    * how hard can it be to provide working software on our clusters?
-* we had a big reorg at CSCS
-    * all of the people who were responsible for software were looking for other roles... for some reason
+    * why can't we have up-to-date software on HPC systems?
 
-So I took responsibility for software deployment
-* and have been finding out how hard it is to provide HPC software
 
-Luckily we have a fantastic group of people to support me - the trick is to give them the tools they need!
+CSCS had a reorg -- everybody who had been responsible for deploying software were looking for other roles
+* it was time to try providing up-to-date software.
+
+Luckily we have a fantastic group of people -- the trick is to give them the tools they need!
 
 ---
 layout: two-cols
@@ -35,18 +35,42 @@ layoutClass: gap-2
 
 # Software before Alps
 
-The software environment based on vendor-provided software stack
+_Like everybody else_, user-facing software was built on top of vendor-provided software stack
 
-* The Cray Programming Environment (CPE) installed in the base OS image
-* CPE is released every 6 months
-* CSCS and user software installations were based on
-* Upgrading CPE implied rebuilding CSCS-provided and user-installed software
+* the Cray Programming Environment (CPE) installed in the base OS image;
+* CSCS built additional libraries and applications on top, and installed on a shared file system;
+* users built their software and workflows on top.
+
+We were reluctant to modify CPE:
+* installing a new version or modifying an existing installation required root, and a reboot;
+* it wasn't clear whether we could expect support if we heavily modified the stack.
 
 ::right::
 
-<div class="flex justify-right">
-    <img src="./images/old-stack.png" class="h-110" alt="old software stack">
+<div class="flex justify-center">
+    <img src="./images/old-stack.png" class="h-80" alt="old software stack">
 </div>
+
+Upgrading CPE implied rebuilding CSCS-provided and user-installed software
+* CPE is released every 6 months
+* A breaking change for all parties
+
+---
+
+# Why was this difficult?
+
+The staff who installed the CSCS software and supported users could not modify CPE:
+* they were _glorified users_
+
+Updating the system software was very disruptive
+* rolling back was also impractical
+* so we didn't do it very often
+
+The vendor is conservative -- e.g. the latest release of CPE uses old versions CUDA
+* by the time we had them installed they were very out of date
+
+CSCS was a leader in developing CI/CD for building the software stack and building the ReFrame regression testing framework for HPC
+* but these alone can't address the underlying problem
 
 ---
 
