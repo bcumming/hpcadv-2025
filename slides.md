@@ -17,12 +17,8 @@ I have been at CSCS for 12 years: the first 8 years as a scientific software dev
   <img src="./images/ben.png" alt="Description" style="width: 100%;" />
 </div>
 
-<<<<<<< HEAD
-* effectively a glorified user
-=======
 * spent the first 8 as a research software engineer and benchmarker
     * effectively a glorified user
->>>>>>> 17beac7ccf39acff531cef09f75837090564a252
 * my favourite complaints included:
     * why do people think Python is easy?
     * why can't we have up-to-date software on HPC systems?
