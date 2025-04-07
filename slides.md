@@ -11,35 +11,45 @@ Ben Cumming @ HPC Advisory 2025
 
 ---
 
-I have been at CSCS for 12 years: the first 8 years as a scientific software developer and benchmarker
+I have been at CSCS for 12 years -- the first 8 years as an RSE and benchmarker
 
 <div style="float: right; width: 25%; margin-right: 1em;">
   <img src="./images/ben.png" alt="Description" style="width: 100%;" />
 </div>
 
-* spent the first 8 as a research software engineer and benchmarker
-    * in practice a glorified user (no root)
+* in practice a glorified user (no root)
 * my favourite complaints included:
     * why do people think Python is easy?
     * why can't we have up-to-date software on HPC systems?
 
-CSCS had a reorg -- everybody who had been responsible for deploying software were looking for other roles
+CSCS had a reorg -- the folk responsible for deploying software wanted to try something new...
 * it was time to try providing up-to-date software.
 
-Luckily we have a fantastic group of people -- the trick is to give them the tools they need!
+<--! The CPE provides softare developed by HPE: the Cray compilers, cray-mpich, profiling / debugging tools.
+It also provides standard packages (hdf5, netcdf, fftw, etc) configured for HPC.
+It is installed as a set of RPMs, and provides modules as an iterface.
 
+It is the richest and best vendored "HPC stack" I have used, and it is delivered as "traditional HPC software".
+
+But compare and contrast this to how NVIDA software stack is provided:
+- free download of binaries
+- source code.
+- everything can be spack installed, pip installed.
+- containers, NGC, 
+
+-->
 ---
 layout: two-cols
 layoutClass: gap-2
 ---
 
-# Software before Alps
+# Software@CSCS pre-Alps
 
-_Like everybody else_, user-facing software was built on top of vendor-provided software stack
-
+User-facing software was built on top of vendor-provided software stack:
 * the Cray Programming Environment (CPE) installed in the base OS image;
 * CSCS built additional libraries and applications on top, and installed on a shared file system;
-* users built their software and workflows on top.
+* users built their software and workflows on top;
+* ... this is how every CUG site deploys software.
 
 We were reluctant to modify CPE:
 * installing a new version or modifying an existing installation required root, and a reboot;
@@ -71,6 +81,8 @@ The vendor is conservative -- e.g. the latest release of CPE uses old versions C
 
 CSCS was a leader in developing CI/CD for building the software stack and building the ReFrame regression testing framework for HPC
 * but these alone can't address the underlying problem
+
+<---! --->
 
 ---
 
@@ -108,7 +120,7 @@ Alps is a HPE Cray EX system with ~4000 nodes.
 
 We needed to rethink deployment of software, because these don't scale:
 * Getting a system administrator to build a new image and reboot a cluster;
-* Building a monolithic software stack on top of a complex vendored stack.
+* Building a monolithic software stack on top of another monolithic vendored stack.
 
 ::right::
 
@@ -127,15 +139,15 @@ We needed to rethink deployment of software, because these don't scale:
 
 ---
 
-# The new HPC center axioms
+# Axioms
 
 1. HPC Centers provide pre-built software for their users.
 
-1. Vendors are not capable of delivering stable, up to date, software that meets users' needs
+1. Vendors are not capable of delivering stable, up to date, software that meets all our users' needs.
 
-1. Scientific projects have 1-3 year duration - once installed it should work for the project duration.
+1. Once a scientific project has set up their workflow, it should continue working for the project's 1-3 year duration.
 
-1. Developers and some communities like ML/AI users update frequently to the latest versions of software
+1. Developers and some communities like ML/AI users update continuously to the latest versions of software.
 
 1. Staff who install software and help users need to have full control over the whole software stack.
 
@@ -152,7 +164,7 @@ We created [Stackinator](https://eth-cscs.github.io/stackinator/) for building s
 * Each software stack is a yaml _recipe_;
 * Clusters are described in yaml files;
 * `Stackinator(recipe, cluster) -> Makefile`;
-* The Makefile generates a squashfs file of the complete software stack;
+* The Makefile generates a **squashfs file** of the complete software stack;
 * Minimal dependencies on the base OS (libfabric).
 
 Uses Spack and packages with Alps-specific optimizations:
@@ -183,8 +195,6 @@ icon:
   - netcdf-cxx4@4.3.1%nvhpc
   - netcdf-fortran@4.6.1%nvhpc
   - openblas
-  # for validation
-  - cdo
   variants:
   - +mpi
   - +cuda
@@ -255,12 +265,12 @@ We followed the "principle of least surprise" when deciding on default behavior:
 
 ::right::
 
-Slurm will mounts squashfs and configures the environment on the compute nodes using flags:
+Slurm mounts squashfs and configures the environment on the compute nodes using flags:
 ```console
 $ srun --uenv=gromacs/2024 --view=plumed -n4 -N1 gmx_mpi ...
 ```
 
-`srun` inherits the login environment from by default:
+`srun` inherits the login environment by default:
 ```console
 $ uenv start gromacs/2024 --view=plumed
 $ srun -n4 -N1 gmx_mpi ...
@@ -340,7 +350,7 @@ $ srun -n64 -N16 --gpus-per-task=1 vasp_gam ...
 # Axioms revisited
 
 1. ✅ HPC Centers provide pre-built software for their users.
-1. Vendors are not capable of delivering stable, up to date, software that meets users' needs
+1. Vendors are not capable of delivering stable, up to date, software that meets all our users' needs.
 1. ✅ Scientific projects have 1-3 year duration - once installed it should work for the project duration.
     * over the last 2 years uenv have not broken due to system changes.
     * with breaking changes, we can rebuild images.
@@ -357,17 +367,19 @@ $ srun -n64 -N16 --gpus-per-task=1 vasp_gam ...
 # The Climate and Weather Platform
 
 The Climate and Weather Platform is part of the Alps research infrastructure:
-* "Santis": a GH200 based cluster on Alps
-* the main partners are **C2SM**, Exclaim and MeteoSchweiz.
+* "Santis": a GH200 based vCluster on Alps operated by CSCS.
+* the main partners are **C2SM**, Exclaim and MeteoSchweiz (MCH).
 
 Initially I provided the software environments:
 * An `icon` environment for building and running ICON on Santis;
-* `mch` environments for MeteoSchweiz production;
+* `mch` environments for MCH production (on MCH systems);
 * environments for R&D and analysis.
 
-C2SM created their own pipeline for deploying uenv:
-* C2SM and MeteoSchweiz software stacks are no longer under sole management by CSCS;
-* C2SM are actively updating [their recipes](https://github.com/C2SM/software-stack-recipes/pull/6).
+C2SM and MCH _enthusiastically_ created a pipeline for deploying uenv:
+* C2SM and MCH software stacks are no longer under sole management by CSCS;
+* C2SM are actively creating and updating [recipes](https://github.com/C2SM/software-stack-recipes/pull/6).
+
+Smaller communities and individual users are also building and sharing uenv.
 
 ---
 
@@ -388,23 +400,22 @@ __This wasn't part of a clever masterplan - we focussed on end to end responsibi
 
 ---
 
-# A word on documentation
+# on documentation...
 
-Our current documentation uses Confluence (don't try this at home)
-* only CSCS staff can edit docs
-* they have to use unfamiliar workflows to write, review and deploy docs
-* the docs are not great, and user communities are creating parallel docs in markdown
+Our current documentation uses Confluence (don't try this at home):
+* only CSCS staff can edit docs;
+* unfamiliar and awkward workflows to write, review and deploy docs;
+* the docs are not great -- user communities are creating parallel docs in markdown.
 
-We are moving to a GitHub repository with:
-* a deployment pipeline that generates preview docs
-* familiar tools
-* they can contribute to the whole documentation stack
+CSCS are moving to a GitHub repository with:
+* deployment via CI/CD that generates preview docs;
+* familiar tools and workflows;
+* everybody can also contribute to the documentation infrastructure;
 * staff are contributing much more enthusiastically already!
 
-If docs are structured around communities... will the contribute?
+**Open question**: if docs are structured around communities and platforms... will they contribute?
 
 ---
-
 
 <br>
 <br>
