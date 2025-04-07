@@ -25,19 +25,6 @@ I have been at CSCS for 12 years -- the first 8 years as an RSE and benchmarker
 CSCS had a reorg -- the folk responsible for deploying software wanted to try something new...
 * it was time to try providing up-to-date software.
 
-<--! The CPE provides softare developed by HPE: the Cray compilers, cray-mpich, profiling / debugging tools.
-It also provides standard packages (hdf5, netcdf, fftw, etc) configured for HPC.
-It is installed as a set of RPMs, and provides modules as an iterface.
-
-It is the richest and best vendored "HPC stack" I have used, and it is delivered as "traditional HPC software".
-
-But compare and contrast this to how NVIDA software stack is provided:
-- free download of binaries
-- source code.
-- everything can be spack installed, pip installed.
-- containers, NGC, 
-
--->
 ---
 layout: two-cols
 layoutClass: gap-2
@@ -81,8 +68,6 @@ The vendor is conservative -- e.g. the latest release of CPE uses old versions C
 
 CSCS was a leader in developing CI/CD for building the software stack and building the ReFrame regression testing framework for HPC
 * but these alone can't address the underlying problem
-
-<---! --->
 
 ---
 
